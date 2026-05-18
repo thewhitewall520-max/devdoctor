@@ -6,3 +6,11 @@ export async function main(argv: string[] = process.argv): Promise<void> {
 }
 
 export { createCliProgram } from "./cli/program.js";
+export { scanRepo } from "./scanners/repo.js";
+export type {
+  DetectedFile,
+  DetectedFileType,
+  PrimaryProjectType,
+  ProjectType,
+  ScannerResult,
+} from "./scanners/repo.js";
