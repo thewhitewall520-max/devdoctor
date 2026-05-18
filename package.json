@@ -15,7 +15,9 @@
     "node": ">=18"
   },
   "dependencies": {
-    "commander": "^12.1.0"
+    "commander": "^12.1.0",
+    "js-yaml": "^4.1.1",
+    "smol-toml": "^1.6.1"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",

@@ -14,3 +14,11 @@ export type {
   ProjectType,
   ScannerResult,
 } from "./scanners/repo.js";
+export { detectDependencies } from "./detectors/dependency.js";
+export type {
+  DependencyResult,
+  PackageManager,
+  RequiredFile,
+  RuntimeInfo,
+  StackName,
+} from "./detectors/dependency.js";
