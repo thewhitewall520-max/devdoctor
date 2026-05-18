@@ -1,0 +1,27 @@
+{
+  "name": "devdoctor",
+  "version": "0.1.0",
+  "description": "Local repository pre-flight diagnostics CLI",
+  "type": "module",
+  "bin": {
+    "devdoctor": "./dist/cli.js"
+  },
+  "scripts": {
+    "dev": "tsx src/cli.ts",
+    "build": "tsup src/cli.ts --format esm --clean --out-dir dist",
+    "test": "vitest run"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "commander": "^12.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "tsup": "^8.3.5",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}
