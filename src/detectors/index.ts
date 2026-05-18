@@ -14,3 +14,14 @@ export type {
   RuntimeInfo,
   StackName,
 } from "./dependency.js";
+export { checkEnvironment } from "./environment.js";
+export type {
+  CommandResult,
+  CommandRunner,
+  EnvDetectorOptions,
+  EnvironmentResult,
+  ToolInfo,
+  ToolName,
+  ToolSource,
+  VersionMismatch,
+} from "./environment.js";

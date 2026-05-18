@@ -22,3 +22,14 @@ export type {
   RuntimeInfo,
   StackName,
 } from "./detectors/dependency.js";
+export { checkEnvironment } from "./detectors/environment.js";
+export type {
+  CommandResult,
+  CommandRunner,
+  EnvDetectorOptions,
+  EnvironmentResult,
+  ToolInfo,
+  ToolName,
+  ToolSource,
+  VersionMismatch,
+} from "./detectors/environment.js";
