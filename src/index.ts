@@ -33,3 +33,12 @@ export type {
   ToolSource,
   VersionMismatch,
 } from "./detectors/environment.js";
+export { inspectPorts } from "./inspectors/ports.js";
+export type {
+  PortInspectionResult,
+  PortInspectorOptions,
+  PortProbe,
+  PortProbeResult,
+  PortProtocol,
+  PortStatus,
+} from "./inspectors/ports.js";
