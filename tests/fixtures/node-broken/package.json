@@ -1,0 +1,9 @@
+{
+  "name": "node-broken",
+  "version": "1.0.0",
+  "dependencies": {
+    "express": "^4.18.0",
+    "lodash": "^4.17.21",
+    "missing-pkg": "^1.0.0"
+  }
+}

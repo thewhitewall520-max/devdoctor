@@ -1,0 +1,8 @@
+version: '3'
+services:
+  web:
+    # Missing image field
+    ports:
+      - "80:80"
+  db:
+    image: postgres:15
