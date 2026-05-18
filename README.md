@@ -1,34 +1,66 @@
 # DevDoctor 🩺
 
-**Scan any repo. Tell me exactly why it won't run.**
+**One command. Before anything breaks.**
 
-## Problem Statement
+Scan any repo. Instantly know what's wrong, what's missing, and how to fix it.
 
-You clone a repo. You follow the README. It doesn't work.
+---
 
-Missing .env. Wrong Node version. A port is taken. No one knows why.
+## The Problem
 
-Hours wasted. Every time.
+Every developer knows the feeling.
 
-DevDoctor is a CLI that inspects a repository and tells you — concretely, in plain language — what's broken and how to fix it. Before you even run `npm install`.
+You clone a repo. You read the README. You run `npm install`. It fails. You chase missing `.env` vars, wrong Node versions, port conflicts, undocumented system deps. Thirty minutes later, you still haven't run the app.
 
-## V1 Scope
+This happens on every project. Every time. And it's completely preventable.
 
-- Local CLI only
-- Supports: Node.js, Python, Docker Compose, .env validation, common port conflicts
-- Scans repo structure and detects missing deps, misconfigured env files, conflicting services, and version mismatches
-- Outputs clear, actionable fix instructions
+## How DevDoctor Fixes It
 
-## Forbidden Scope (V1)
+**One command that checks everything before you run anything.**
 
-- ❌ GUI or web interface
-- ❌ AI / LLM features
-- ❌ Cloud sync or SaaS
-- ❌ Team / organization features
-- ❌ Accounts or payments
-- ❌ Plugins or extensions
-- ❌ Kubernetes, Java, Go, Rust, VSCode extension support
+DevDoctor inspects a repo and tells you — in plain language — what's broken, what's missing, and what command to run to fix it. No config files. No setup. Just run it.
 
-## Status
+```bash
+npx devdoctor .
+```
 
-**Planning** — Project scaffold in progress.
+```
+DevDoctor — ./some-repo
+
+Issues found: 3
+✓ Environment:  .env OK
+✗ Dependencies: package.json → express@4.x is missing
+✗ Port:         3000 is already in use
+✗ Docker:       service "db" has no image
+
+Fix:
+  npm install express
+  docker compose pull db
+```
+
+## Quick Install
+
+```bash
+npm install -g devdoctor
+# or
+npx devdoctor .
+```
+
+## Supported Checks
+
+- **Node.js** — missing deps, engine version mismatches, invalid scripts
+- **Python** — missing requirements, Python version, virtual env status
+- **Docker Compose** — syntax errors, missing images, port conflicts
+- **.env** — missing or misconfigured environment variables
+- **Port conflicts** — what's already listening on ports the project needs
+- **System deps** — missing brew/apt packages (coming in V1.1)
+
+## Why This Matters Now
+
+The JavaScript ecosystem alone has 3M+ packages. Every repo is a snowflake of toolchain, runtime, and environment requirements. What worked on the author's machine won't on yours — and the README won't tell you why.
+
+DevDoctor is the **pre-flight checklist** that should have existed from day one.
+
+---
+
+*Clone first. Debug never.* 🩺

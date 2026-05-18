@@ -5,7 +5,7 @@ Check that all required dependencies are present and compatible.
 
 ## Requirements
 - **Node.js**: read `package.json`, verify `dependencies` and `devDependencies` exist in `node_modules/`
-- **Python**: read `requirements.txt`, check each package is installed (`pip list` or `import` check)
+- **Python**: read `requirements.txt`, check each package is installed via `pip list --format=json`（V1 只走此方案，不做 import 语句解析）
 - Report missing packages
 - Report engine version mismatches (Node.js version vs `engines` field)
 - Skip if no dependency file found
