@@ -80,18 +80,11 @@ describe("generateReport", () => {
     );
   });
 
-  it("reports occupied port", () => {
+  it("reports occupied port when relevant to a Node project", () => {
     const report = generateReport({
+      scanner: scanner({ projectType: "node", projectTypes: ["node"] }),
       ports: ports({
-        occupiedPorts: [
-          {
-            port: 3000,
-            occupied: true,
-            protocol: "tcp",
-            likelyService: "Node.js dev server",
-            warning: null,
-          },
-        ],
+        occupiedPorts: [occupiedPort(3000)],
       }),
     });
 
@@ -100,6 +93,115 @@ describe("generateReport", () => {
       title: "3000 端口被占用",
       explanation: "3000 端口已被占用，开发服务器可能无法启动。",
     });
+  });
+
+  it("does not report 11434 for an unknown project", () => {
+    const report = generateReport({
+      scanner: scanner({ projectType: "unknown", projectTypes: [] }),
+      ports: ports({ occupiedPorts: [occupiedPort(11434)] }),
+    });
+
+    expect(portIssueTitles(report)).toEqual([]);
+  });
+
+  it("does not report 3000 for an unknown project", () => {
+    const report = generateReport({
+      scanner: scanner({ projectType: "unknown", projectTypes: [] }),
+      ports: ports({ occupiedPorts: [occupiedPort(3000)] }),
+    });
+
+    expect(portIssueTitles(report)).toEqual([]);
+  });
+
+  it("reports 3000 for a Node project", () => {
+    const report = generateReport({
+      scanner: scanner({ projectType: "node", projectTypes: ["node"] }),
+      ports: ports({ occupiedPorts: [occupiedPort(3000)] }),
+    });
+
+    expect(portIssueTitles(report)).toEqual(["3000 端口被占用"]);
+  });
+
+  it("does not report 11434 for a Node project", () => {
+    const report = generateReport({
+      scanner: scanner({ projectType: "node", projectTypes: ["node"] }),
+      ports: ports({ occupiedPorts: [occupiedPort(11434)] }),
+    });
+
+    expect(portIssueTitles(report)).toEqual([]);
+  });
+
+  it("reports 8000 for a Python project", () => {
+    const report = generateReport({
+      scanner: scanner({ projectType: "python", projectTypes: ["python"] }),
+      ports: ports({ occupiedPorts: [occupiedPort(8000)] }),
+    });
+
+    expect(portIssueTitles(report)).toEqual(["8000 端口被占用"]);
+  });
+
+  it("does not report 3000 for a Python project", () => {
+    const report = generateReport({
+      scanner: scanner({ projectType: "python", projectTypes: ["python"] }),
+      ports: ports({ occupiedPorts: [occupiedPort(3000)] }),
+    });
+
+    expect(portIssueTitles(report)).toEqual([]);
+  });
+
+  it("reports 6379 for a Docker redis service", () => {
+    const report = generateReport({
+      scanner: scanner({ projectType: "docker", projectTypes: ["docker"] }),
+      dependency: dependency([{ name: "docker", serviceNames: ["redis"] }]),
+      ports: ports({ occupiedPorts: [occupiedPort(6379)] }),
+    });
+
+    expect(portIssueTitles(report)).toEqual(["6379 端口被占用"]);
+  });
+
+  it("reports 5432 for a Docker postgres service", () => {
+    const report = generateReport({
+      scanner: scanner({ projectType: "docker", projectTypes: ["docker"] }),
+      dependency: dependency([{ name: "docker", serviceNames: ["postgres"] }]),
+      ports: ports({ occupiedPorts: [occupiedPort(5432)] }),
+    });
+
+    expect(portIssueTitles(report)).toEqual(["5432 端口被占用"]);
+  });
+
+  it("does not report unrelated 11434 for a Docker project", () => {
+    const report = generateReport({
+      scanner: scanner({ projectType: "docker", projectTypes: ["docker"] }),
+      dependency: dependency([{ name: "docker", serviceNames: ["redis"] }]),
+      ports: ports({ occupiedPorts: [occupiedPort(11434)] }),
+    });
+
+    expect(portIssueTitles(report)).toEqual([]);
+  });
+
+  it("reports only context-relevant ports for a mixed project", () => {
+    const report = generateReport({
+      scanner: scanner({
+        projectType: "mixed",
+        projectTypes: ["node", "python", "docker"],
+      }),
+      dependency: dependency([{ name: "docker", serviceNames: ["mongodb"] }]),
+      ports: ports({
+        occupiedPorts: [
+          occupiedPort(3000),
+          occupiedPort(8000),
+          occupiedPort(27017),
+          occupiedPort(5432),
+          occupiedPort(11434),
+        ],
+      }),
+    });
+
+    expect(portIssueTitles(report)).toEqual([
+      "3000 端口被占用",
+      "8000 端口被占用",
+      "27017 端口被占用",
+    ]);
   });
 
   it("reports unknown project", () => {
@@ -133,15 +235,7 @@ describe("generateReport", () => {
         missingTools: [tool("node")],
       }),
       ports: ports({
-        occupiedPorts: [
-          {
-            port: 3000,
-            occupied: true,
-            protocol: "tcp",
-            likelyService: "Node.js dev server",
-            warning: null,
-          },
-        ],
+        occupiedPorts: [occupiedPort(3000)],
       }),
     });
 
@@ -221,6 +315,22 @@ function ports(partial: Partial<PortInspectionResult> = {}): PortInspectionResul
     error: null,
     ...partial,
   };
+}
+
+function occupiedPort(port: number) {
+  return {
+    port,
+    occupied: true,
+    protocol: "tcp" as const,
+    likelyService: null,
+    warning: null,
+  };
+}
+
+function portIssueTitles(report: ReturnType<typeof generateReport>): string[] {
+  return report.issues
+    .filter((issue) => issue.title.endsWith("端口被占用"))
+    .map((issue) => issue.title);
 }
 
 function tool(name: ToolInfo["name"]): ToolInfo {
