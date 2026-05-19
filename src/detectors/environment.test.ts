@@ -59,7 +59,7 @@ describe("checkEnvironment", () => {
 
     expect(result.missingTools).toHaveLength(1);
     expect(result.missingTools[0]?.name).toBe("node");
-    expect(result.warnings[0]).toContain("command timed out");
+    expect(result.warnings[0]).toBe("检测 node 超时。");
   });
 
   it("handles command errors", async () => {
@@ -74,7 +74,49 @@ describe("checkEnvironment", () => {
 
     expect(result.error).toBeNull();
     expect(result.missingTools[0]?.installed).toBe(false);
-    expect(result.warnings[0]).toContain("not found");
+    expect(result.warnings[0]).toBe("未找到 node。");
+  });
+
+  it("does not expose raw command failures", async () => {
+    const result = await checkEnvironment(".", {
+      dependencyResult: dependencyResult({
+        detectedRuntimes: [{ name: "node", packageManager: "pnpm" }],
+      }),
+      commandRunner: async (command, args) => {
+        throw new Error(`Command failed: ${command} ${args.join(" ")}`);
+      },
+    });
+
+    expect(result.warnings.join("\n")).not.toContain("Command failed");
+  });
+
+  it("does not expose raw which or where errors", async () => {
+    const result = await checkEnvironment(".", {
+      platform: "win32",
+      dependencyResult: dependencyResult({
+        detectedRuntimes: [{ name: "node" }],
+      }),
+      commandRunner: async (command, args) => {
+        throw new Error(`${command} ${args.join(" ")} failed`);
+      },
+    });
+
+    expect(result.warnings.join("\n")).not.toContain("where");
+    expect(result.warnings.join("\n")).not.toContain("which");
+  });
+
+  it("uses human-readable missing tool warnings", async () => {
+    const result = await checkEnvironment(".", {
+      dependencyResult: dependencyResult({
+        detectedRuntimes: [{ name: "node", packageManager: "pnpm" }],
+      }),
+      commandRunner: fakeRunner({
+        which: { node: "/bin/node" },
+        versions: { node: "v20.0.0" },
+      }),
+    });
+
+    expect(result.warnings).toContain("未找到 pnpm。");
   });
 
   it("accepts a matching node version", async () => {

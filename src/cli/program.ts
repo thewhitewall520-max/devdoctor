@@ -18,15 +18,33 @@ export function createCliProgram(): Command {
     .description("Scan a repository")
     .argument("[path]", "Repository path", process.cwd())
     .action(async (repositoryPath: string) => {
-      const result = await runDiagnosticScan(repositoryPath);
-      program.optsWithGlobals();
-      console.log(
-        formatReport(result.report, {
-          rootPath: result.rootPath,
-          noColor: process.env.NO_COLOR !== undefined,
-        }),
-      );
+      try {
+        const result = await runDiagnosticScan(repositoryPath);
+        program.optsWithGlobals();
+        console.log(
+          formatReport(result.report, {
+            rootPath: result.rootPath,
+            noColor: process.env.NO_COLOR !== undefined,
+          }),
+        );
+        process.exitCode = result.report.issues.some((issue) => {
+          return issue.severity === "critical";
+        })
+          ? 1
+          : 0;
+      } catch (error) {
+        process.exitCode = 2;
+        console.error(`扫描失败：${errorMessage(error)}`);
+      }
     });
 
   return program;
+}
+
+function errorMessage(error: unknown): string {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  return "未知错误";
 }
