@@ -1,7 +1,7 @@
 import { Command } from "commander";
 
-import { formatScanResult } from "../report/index.js";
-import { initializeScanner } from "../scanner/index.js";
+import { formatReport } from "../report/index.js";
+import { runDiagnosticScan } from "../scanner/index.js";
 import { VERSION } from "../utils/version.js";
 
 export function createCliProgram(): Command {
@@ -15,12 +15,17 @@ export function createCliProgram(): Command {
 
   program
     .command("scan")
-    .description("Initialize a repository scan")
+    .description("Scan a repository")
     .argument("[path]", "Repository path", process.cwd())
-    .action((repositoryPath: string) => {
-      const result = initializeScanner({ repositoryPath });
+    .action(async (repositoryPath: string) => {
+      const result = await runDiagnosticScan(repositoryPath);
       program.optsWithGlobals();
-      console.log(formatScanResult(result));
+      console.log(
+        formatReport(result.report, {
+          rootPath: result.rootPath,
+          noColor: process.env.NO_COLOR !== undefined,
+        }),
+      );
     });
 
   return program;
