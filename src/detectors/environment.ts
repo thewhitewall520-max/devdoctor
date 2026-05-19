@@ -185,9 +185,7 @@ async function checkTool(
     });
     tool.path = firstLine(resolved.stdout);
   } catch (error) {
-    options.warnings.push(
-      `${definition.name} is not available: ${commandErrorMessage(error)}`,
-    );
+    options.warnings.push(missingToolWarning(definition.name, error));
     return tool;
   }
 
@@ -201,9 +199,7 @@ async function checkTool(
     tool.installed = true;
     return tool;
   } catch (error) {
-    options.warnings.push(
-      `${definition.name} version check failed: ${commandErrorMessage(error)}`,
-    );
+    options.warnings.push(versionCheckWarning(definition.name, error));
     tool.path = null;
     return tool;
   }
@@ -395,16 +391,32 @@ function firstLine(output: string): string | null {
   return output.split(/\r?\n/).find((line) => line.trim().length > 0)?.trim() ?? null;
 }
 
-function commandErrorMessage(error: unknown): string {
+function missingToolWarning(toolName: ToolName, error: unknown): string {
   if (isTimeoutError(error)) {
-    return "command timed out";
+    return `检测 ${toolDisplayName(toolName)} 超时。`;
   }
 
-  if (error instanceof Error && error.message) {
-    return error.message;
+  return `未找到 ${toolDisplayName(toolName)}。`;
+}
+
+function versionCheckWarning(toolName: ToolName, error: unknown): string {
+  if (isTimeoutError(error)) {
+    return `检测 ${toolDisplayName(toolName)} 超时。`;
   }
 
-  return "command failed";
+  return `无法检测 ${toolDisplayName(toolName)} 是否已安装。`;
+}
+
+function toolDisplayName(toolName: ToolName): string {
+  if (toolName === "docker compose" || toolName === "docker-compose") {
+    return "Docker Compose";
+  }
+
+  if (toolName === "docker") {
+    return "Docker";
+  }
+
+  return toolName;
 }
 
 function isTimeoutError(error: unknown): boolean {
