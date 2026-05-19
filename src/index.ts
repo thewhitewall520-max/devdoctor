@@ -42,3 +42,10 @@ export type {
   PortProtocol,
   PortStatus,
 } from "./inspectors/ports.js";
+export { generateReport } from "./report/generator.js";
+export type {
+  IssueSeverity,
+  ReportInput,
+  ReportIssue,
+  ReportResult,
+} from "./report/types.js";
