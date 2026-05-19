@@ -1,7 +1,7 @@
 import type { RuntimeInfo } from "../detectors/dependency.js";
 import type { ToolInfo, VersionMismatch } from "../detectors/environment.js";
 import type { PortStatus } from "../inspectors/ports.js";
-import type { ProjectType } from "../scanners/repo.js";
+import type { PrimaryProjectType, ProjectType } from "../scanners/repo.js";
 import type { ReportInput, ReportIssue, ReportResult } from "./types.js";
 
 const SEVERITY_RANK: Record<ReportIssue["severity"], number> = {
@@ -84,8 +84,81 @@ function addEnvironmentIssues(
 
 function addPortIssues(input: ReportInput, issues: ReportIssue[]): void {
   for (const port of input.ports?.occupiedPorts ?? []) {
+    if (!isRelevantPort(port.port, input)) {
+      continue;
+    }
     issues.push(occupiedPortIssue(port));
   }
+}
+
+function isRelevantPort(port: number, input: ReportInput): boolean {
+  if (port === 11434) {
+    return false;
+  }
+
+  const projectTypes = projectContext(input);
+  if (projectTypes.length === 0) {
+    return false;
+  }
+
+  return projectTypes.some((projectType) => {
+    if (projectType === "node") {
+      return [3000, 3001, 5173, 8000, 8080].includes(port);
+    }
+
+    if (projectType === "python") {
+      return [8000, 8080].includes(port);
+    }
+
+    if (projectType === "docker") {
+      return dockerRelevantPorts(input).includes(port);
+    }
+
+    return false;
+  });
+}
+
+function projectContext(input: ReportInput): PrimaryProjectType[] {
+  if (input.scanner?.projectType === "unknown") {
+    return [];
+  }
+
+  if (input.scanner?.projectTypes && input.scanner.projectTypes.length > 0) {
+    return input.scanner.projectTypes;
+  }
+
+  return uniquePrimaryTypes(
+    (input.dependency?.detectedRuntimes ?? []).map((runtime) => runtime.name),
+  );
+}
+
+function dockerRelevantPorts(input: ReportInput): number[] {
+  const ports = new Set<number>();
+  const dockerRuntime = input.dependency?.detectedRuntimes.find((runtime) => {
+    return runtime.name === "docker";
+  });
+
+  for (const serviceName of dockerRuntime?.serviceNames ?? []) {
+    const normalized = serviceName.toLowerCase();
+
+    if (["postgres", "postgresql", "db"].includes(normalized)) {
+      ports.add(5432);
+    }
+
+    if (["mysql", "mariadb"].includes(normalized)) {
+      ports.add(3306);
+    }
+
+    if (normalized === "redis") {
+      ports.add(6379);
+    }
+
+    if (["mongo", "mongodb"].includes(normalized)) {
+      ports.add(27017);
+    }
+  }
+
+  return [...ports];
 }
 
 function missingToolIssue(
@@ -233,6 +306,22 @@ function hasRuntime(
   runtimeName: RuntimeInfo["name"],
 ): boolean {
   return runtimes.some((runtime) => runtime.name === runtimeName);
+}
+
+function uniquePrimaryTypes(values: string[]): PrimaryProjectType[] {
+  const primaryTypes: PrimaryProjectType[] = [];
+
+  for (const value of values) {
+    if (isPrimaryProjectType(value) && !primaryTypes.includes(value)) {
+      primaryTypes.push(value);
+    }
+  }
+
+  return primaryTypes;
+}
+
+function isPrimaryProjectType(value: string): value is PrimaryProjectType {
+  return value === "node" || value === "python" || value === "docker";
 }
 
 function unique(values: string[]): string[] {
