@@ -1,15 +1,27 @@
-import { describe, expect, it, vi } from "vitest";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { createCliProgram } from "./program.js";
 
+const tempRoots: string[] = [];
+
+afterEach(() => {
+  for (const tempRoot of tempRoots.splice(0)) {
+    fs.rmSync(tempRoot, { recursive: true, force: true });
+  }
+});
+
 describe("createCliProgram", () => {
-  it("prints scaffold output for scan", async () => {
-    const output = await runCli(["node", "devdoctor", "scan"]);
+  it("prints a real diagnostic report for scan", async () => {
+    const root = fixture({});
+    const output = await runCli(["node", "devdoctor", "scan", root]);
 
     expect(output).toContain("DevDoctor v0.1");
-    expect(output).toContain("Scanning repository...");
-    expect(output).toContain(`Repository path: ${process.cwd()}`);
-    expect(output).toContain("Scanner initialized.");
+    expect(output).toContain(`Scanning repository: ${root}`);
+    expect(output).not.toContain("Scanner initialized.");
   });
 
   it("prints help with the scan command", async () => {
@@ -51,6 +63,17 @@ async function runCli(argv: string[]): Promise<string> {
   }
 
   return writes.join("");
+}
+
+function fixture(files: Record<string, string>): string {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "devdoctor-cli-"));
+  tempRoots.push(root);
+
+  for (const [fileName, contents] of Object.entries(files)) {
+    fs.writeFileSync(path.join(root, fileName), contents);
+  }
+
+  return root;
 }
 
 function isCommanderHelpOrVersionExit(error: unknown): boolean {

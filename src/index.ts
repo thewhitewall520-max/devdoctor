@@ -43,9 +43,16 @@ export type {
   PortStatus,
 } from "./inspectors/ports.js";
 export { generateReport } from "./report/generator.js";
+export { formatReport } from "./report/formatter.js";
 export type {
   IssueSeverity,
   ReportInput,
   ReportIssue,
   ReportResult,
 } from "./report/types.js";
+export type { FormatReportOptions } from "./report/formatter.js";
+export { runDiagnosticScan } from "./scanner/index.js";
+export type {
+  DiagnosticScanDependencies,
+  DiagnosticScanResult,
+} from "./scanner/index.js";
